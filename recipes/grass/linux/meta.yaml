@@ -1,34 +1,3 @@
-# This is a platform-dispatcher recipe that redirects to platform-specific recipes
-# It uses Jinja2 to include the appropriate platform-specific meta.yaml
-
-{% if target_platform.startswith('linux') %}
-{% include 'linux/meta.yaml' %}
-{% elif target_platform.startswith('osx') %}
-{% include 'osx/meta.yaml' %}
-{% elif target_platform.startswith('win') %}
-{% include 'win/meta.yaml' %}
-{% else %}
-# Fallback for unknown platforms
-{% set name = "grass" %}
-{% set version = "8.4.1" %}
-
-package:
-  name: {{ name }}
-  version: {{ version }}
-
-build:
-  number: 0
-  skip: true  # Unknown platform
-
-about:
-  home: https://grass.osgeo.org/
-  license: GPL-2.0-or-later
-  summary: GRASS GIS - Platform not supported
-{% endif %}
-
-# Legacy compatibility section for older conda-build
-# This section is ignored when using include directives above
-{% if False %}
 {% set name = "grass" %}
 {% set version = "8.4.1" %}
 {% set sha256 = "611e82dd919cd0e5c1a511e7efbc5c769e22ac6c613c3c4a2633c5d4b07c7e31" %}
@@ -43,8 +12,8 @@ source:
 
 build:
   number: 0
-  skip: true  # [win or py<310]
-  script: {{ RECIPE_DIR }}/{{ target_platform.split('-')[0] }}/build.sh  # [unix]
+  skip: true  # [not linux or py<310]
+  script: build.sh
   ignore_run_exports:
     - gdal
     - libtiff
@@ -62,7 +31,6 @@ build:
     - libjpeg-turbo
     - freetype
     - libexpat
-  # GRASS uses Autotools configure/make; build.sh handles the steps
 
 requirements:
   build:
@@ -140,7 +108,7 @@ requirements:
     - libnetcdf
     - pdal
     - libpdal-core
-    - _openmp_mutex
+    - _openmp_mutex  # Linux: OpenMP support enabled
     # Python modules typically used by GRASS python tools
     - numpy
     - pillow
