@@ -64,24 +64,22 @@ echo "=== Running configure ===" >&2
 ./configure ${CONFIG_FLAGS[@]} 2>&1 | tee /tmp/configure-output.txt
 echo "configure-complete" > /tmp/build-status.txt
 
-echo "=== Running make ===" >&2
-make -j${CPU_COUNT:-2}
-echo "make-complete" >> /tmp/build-status.txt
-
-# Fix ICONVLIB after make but before install: GNU libiconv from conda requires -liconv 
-# but configure detects iconv in libc and sets ICONVLIB to empty. Force it to -liconv.
+## IMPORTANT: Fix ICONVLIB immediately after configure and BEFORE make
+# GNU libiconv from conda requires -liconv but configure often detects iconv in
+# glibc and leaves ICONVLIB empty. Force linking against libiconv so libgrass_gis
+# gets a DT_NEEDED entry for libiconv and avoids runtime "undefined symbol: libiconv".
 if [[ "$OSTYPE" != "darwin"* ]]; then
-    echo "=== Fixing ICONVLIB in Platform.make (Linux) ===" >&2
+    echo "=== Fixing ICONVLIB in Platform.make (Linux) BEFORE make ===" >&2
     if [ -f include/Make/Platform.make ]; then
         echo "=== Before fix ===" >&2
         grep "^ICONVLIB" include/Make/Platform.make >&2 || echo "ICONVLIB not found in Platform.make" >&2
-        # Use --no-as-needed to force libiconv to be linked even if not directly referenced
+        # Use --no-as-needed to force libiconv to be linked even if lazily referenced
         sed -i 's/^ICONVLIB[[:space:]]*=.*/ICONVLIB = -Wl,--no-as-needed -liconv -Wl,--as-needed/' include/Make/Platform.make
         echo "=== After fix ===" >&2
         grep "^ICONVLIB" include/Make/Platform.make >&2
     fi
 else
-    echo "=== Fixing ICONVLIB in Platform.make (macOS) ===" >&2
+    echo "=== Fixing ICONVLIB in Platform.make (macOS) BEFORE make ===" >&2
     if [ -f include/Make/Platform.make ]; then
         echo "=== Before fix ===" >&2
         grep "^ICONVLIB" include/Make/Platform.make >&2 || echo "ICONVLIB not found in Platform.make" >&2
@@ -91,6 +89,10 @@ else
         grep "^ICONVLIB" include/Make/Platform.make >&2
     fi
 fi
+
+echo "=== Running make ===" >&2
+make -j${CPU_COUNT:-2}
+echo "make-complete" >> /tmp/build-status.txt
 
 echo "=== Running make install ===" >&2
 make install
