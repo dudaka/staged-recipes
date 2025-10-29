@@ -45,26 +45,27 @@
 
 ## When to Edit What
 
-| What You Want to Change | File to Edit |
-|------------------------|-------------|
-| Linux dependencies | `linux/meta.yaml` |
-| Linux build process | `linux/build.sh` |
-| macOS dependencies | `osx/meta.yaml` |
-| macOS build process | `osx/build.sh` |
-| Windows dependencies | `win/meta.yaml` |
-| Windows build process | `win/bld.bat` |
-| Version or source URL | Update in each platform's `meta.yaml` |
-| Add new platform | Create new directory with `meta.yaml` + build script |
+| What You Want to Change | File to Edit                                         |
+| ----------------------- | ---------------------------------------------------- |
+| Linux dependencies      | `linux/meta.yaml`                                    |
+| Linux build process     | `linux/build.sh`                                     |
+| macOS dependencies      | `osx/meta.yaml`                                      |
+| macOS build process     | `osx/build.sh`                                       |
+| Windows dependencies    | `win/meta.yaml`                                      |
+| Windows build process   | `win/bld.bat`                                        |
+| Version or source URL   | Update in each platform's `meta.yaml`                |
+| Add new platform        | Create new directory with `meta.yaml` + build script |
 
 ## Example: Adding a Linux-Only Dependency
 
 Edit `linux/meta.yaml`:
+
 ```yaml
 requirements:
   host:
     - python
     - gdal
-    - my-linux-only-lib  # ← Add here
+    - my-linux-only-lib # ← Add here
 ```
 
 This won't affect macOS or Windows builds at all!
